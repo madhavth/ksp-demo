@@ -1,1 +1,3 @@
 com.aniket.myevent.processor.MyEventProcessorProvider
+com.aniket.myevent.processor.TestFunctionProcessorProvider
+com.aniket.myevent.processor.TestRecordProcessorProvider

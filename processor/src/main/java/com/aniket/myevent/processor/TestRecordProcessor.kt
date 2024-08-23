@@ -1,23 +1,26 @@
 package com.aniket.myevent.processor
 
+import com.aniket.myevent.annotations.Calculator
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
-import com.aniket.myevent.annotations.MyTest
 import com.aniket.myevent.annotations.TestRecord
-import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.processing.Dependencies
-import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.validate
-import java.io.File
+import com.squareup.kotlinpoet.DelicateKotlinPoetApi
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.TypeSpec
 import java.io.FileOutputStream
 import java.io.OutputStream
 
 
+@OptIn(DelicateKotlinPoetApi::class)
 class TestRecordProcessor(
     options: Map<String, String>,
     val logger: KSPLogger,
@@ -53,7 +56,7 @@ class TestRecordProcessor(
                     packageName = packageName,
                     fileName = "ExtensionSame",
                 )
-                appendToFile(outputStream, simpleName, classDeclaration, "package $packageName")
+                appendToFile(outputStream, simpleName, classDeclaration, "package $packageName\n")
             } catch (e: Exception) {
                 if (e is FileAlreadyExistsException) {
                     val outputStream = FileOutputStream(e.file, true)
@@ -67,14 +70,61 @@ class TestRecordProcessor(
 
     fun appendToFile(outputStream: OutputStream, simpleName: String, classDeclaration: KSClassDeclaration, packageName: String) {
         val name = "${simpleName}Extension"
+
+        val addAbstract = FunSpec.builder("add")
+            .addParameter("a", Int::class)
+            .addParameter("b", Int::class)
+            .returns(Int::class)
+            .addModifiers(KModifier.ABSTRACT)
+            .build()
+
+
+        val subtractAbstract = FunSpec.builder("subtract")
+            .addParameter("a", Int::class)
+            .addParameter("b", Int::class)
+            .returns(Int::class)
+            .addModifiers(KModifier.ABSTRACT)
+            .build()
+
+
+        val entireInterface = TypeSpec.interfaceBuilder(
+            name + "CallBack"
+        ).addFunction(subtractAbstract)
+            .addFunction(addAbstract)
+            .build()
+
+
+        val addFunction = FunSpec.builder("add")
+            .returns(Int::class)
+            .addModifiers(KModifier.PRIVATE)
+            .addParameter("a", Int::class)
+            .addParameter("b", Int::class.java)
+            .addStatement("return a + b")
+            .build()
+
+
+        val subtractFunction = FunSpec.builder("subtract")
+            .returns(Int::class)
+            .addModifiers(KModifier.OPEN)
+            .addParameter("a", Int::class)
+            .addParameter("b", Int::class)
+            .addStatement("return a - b")
+            .build()
+
+
+        val entireClass = TypeSpec.classBuilder(name)
+            .addAnnotation(Calculator::class.java)
+            .addFunction(addFunction)
+            .addModifiers(KModifier.OPEN)
+            .addFunction(subtractFunction)
+            .build()
+
         outputStream.write(
             """$packageName
-// this class is for $simpleName
-class $name {
-    private val packageName = "${classDeclaration.packageName.asString()}"
-}
-
-        """.trimMargin().toByteArray()
+                |${entireClass}
+                |
+                |${entireInterface}
+            """.trimMargin().toByteArray()
         )
         outputStream.flush()
         outputStream.close()

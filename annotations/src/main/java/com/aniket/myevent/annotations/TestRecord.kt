@@ -1,4 +1,4 @@
 package com.aniket.myevent.annotations
 
-@Retention(AnnotationRetention.BINARY)
+@Target(AnnotationTarget.CLASS)
 annotation class TestRecord

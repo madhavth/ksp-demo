@@ -19,6 +19,3 @@ class ThisIsAnotherTest(val a: Int)
 class TestingThisRecord() {
 
 }
-
-@TestRecord
-class WhatIfRecord(){}

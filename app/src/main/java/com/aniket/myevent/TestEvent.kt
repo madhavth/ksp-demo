@@ -7,11 +7,6 @@ import com.aniket.myevent.annotations.TestRecord
 class ThisIsATestBuddy(val a: Int, val b: Int) {
 }
 
-fun testSomething() {
-   val test = ThisIsATestBuddyTest(10,20)
-   test.addIntegers()
-}
-
 @MyTest
 class ThisIsAnotherTest(val a: Int)
 

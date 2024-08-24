@@ -8,7 +8,6 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.validate
@@ -17,12 +16,8 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
-import com.squareup.kotlinpoet.TypeName
-import com.squareup.kotlinpoet.UNIT
-import com.squareup.kotlinpoet.asTypeName
 import java.io.FileOutputStream
 import java.io.OutputStream
-import kotlin.reflect.KClass
 
 
 class MeasureTimeProcessor(
@@ -89,23 +84,30 @@ class MeasureTimeProcessor(
             function.parameters.forEach {
                 val type = it.type.resolve()
 
+                val  variableName = it.name!!.getShortName()
                 if(!it.isNotKotlinPrimitive()) {
                     copyFunction.addParameter(
-                        it.name!!.getShortName(),
+                        variableName,
                         ClassName.bestGuess(it.getPrimitiveTypeName())
                     )
                     return@forEach
                 }
 
-
                 val declarationPackage = type.declaration.packageName.asString()
                 val declarationName = type.declaration.simpleName.asString()
 
+                if(variableName == "complexType") {
+                    logger.error("current $declarationName is ${type.isFunctionType}")
+                }
+
+                val name = type.declaration.qualifiedName!!.getShortName()
+
                 copyFunction.addParameter(
                     ParameterSpec.builder(
-                        it.name!!.getShortName(),
+                        variableName,
                          ClassName.bestGuess(declarationPackage + "."
-                                 + type.declaration.qualifiedName!!.getShortName())
+                                 + name
+                         )
                     ).build()
                 )
 

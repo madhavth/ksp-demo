@@ -20,7 +20,9 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.validate
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 
 class CalculatorProcessor(
@@ -62,6 +64,9 @@ class CalculatorProcessor(
             )
 
             val classBuilder = TypeSpec.classBuilder(toGenerateFileName)
+                .addSuperinterfaces(
+                    listOf(ClassName.bestGuess("$packageName.$name"))
+                )
 
             val functions = classDeclaration.getDeclaredFunctions()
             for (function in functions) {
@@ -88,12 +93,19 @@ class CalculatorProcessor(
                 }
             }
 
+            val returnThisObject = """fun get$name(): $name {
+                |return ${name}Generated()
+                |}
+            """.trimMargin()
+
             outputStream.use {
                 it.write(
                     """
                     |package $packageName
                     |
                     |${classBuilder.build()}
+                    |
+                    |${returnThisObject}
                 """.trimMargin().toByteArray()
                 )
             }
@@ -150,6 +162,7 @@ class CalculatorProcessor(
             funSpec.addParameters(function.functionArguments())
             funSpec.addStatement("// auto generated code for $shortName")
             callback(funSpec)
+            funSpec.addModifiers(KModifier.OVERRIDE)
             // add the body and return statement
             classDeclaration.addFunction(funSpec.build())
         }

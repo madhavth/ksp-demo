@@ -67,6 +67,7 @@ class CalculatorProcessor(
                 .addSuperinterfaces(
                     listOf(ClassName.bestGuess("$packageName.$name"))
                 )
+                .addModifiers(KModifier.PRIVATE)
 
             val functions = classDeclaration.getDeclaredFunctions()
             for (function in functions) {
@@ -76,21 +77,18 @@ class CalculatorProcessor(
                     arguments = listOf("0")
                 }
 
-                processSymbol(function, Add::class.simpleName, classBuilder) {
+                if(processSymbol(function, Add::class.simpleName, classBuilder) {
                     add(arguments, it)
-                }
-
-                processSymbol(function, Subtract::class.simpleName, classBuilder) {
+                }) { }
+                else if (processSymbol(function, Subtract::class.simpleName, classBuilder) {
                     subtract(arguments, it)
-                }
-
-                processSymbol(function, Multiply::class.simpleName, classBuilder) {
+                }) { }
+                else if(processSymbol(function, Multiply::class.simpleName, classBuilder) {
                     multiply(arguments, it)
-                }
-
-                processSymbol(function, SquareAdd::class.simpleName, classBuilder) {
+                }) { }
+                else if(processSymbol(function, SquareAdd::class.simpleName, classBuilder) {
                     squareAdd(arguments,it)
-                }
+                }) { }
             }
 
             val returnThisObject = """fun get$name(): $name {
@@ -114,7 +112,7 @@ class CalculatorProcessor(
         private fun squareAdd(arguments: List<String?>, it: FunSpec.Builder) {
             val arg = arguments.map {
                 "$it*$it"
-            }.joinToString("+")
+            }.joinToString(" + ")
             it.addStatement("return $arg")
         }
 
@@ -144,7 +142,7 @@ class CalculatorProcessor(
         shortName: String?,
         classDeclaration: TypeSpec.Builder,
         callback: (FunSpec.Builder) -> Unit,
-                      ) {
+                      ): Boolean {
         val containsAnnotation = function.containsAnnotationShortName(shortName)
         if (containsAnnotation) {
             val funSpec = FunSpec.builder(function.simpleName.getShortName())
@@ -166,6 +164,8 @@ class CalculatorProcessor(
             // add the body and return statement
             classDeclaration.addFunction(funSpec.build())
         }
+
+        return containsAnnotation
     }
 
 }

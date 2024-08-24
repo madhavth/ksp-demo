@@ -23,4 +23,7 @@ interface MyCalculator {
 
     @SquareAdd
     fun squareAddThis(a: Int, b: Int): Int
+
+    @Add
+    fun addAndSubtract(a: Int, b: Int): Int
 }

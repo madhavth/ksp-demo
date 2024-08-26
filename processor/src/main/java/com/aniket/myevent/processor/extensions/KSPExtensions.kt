@@ -2,6 +2,7 @@ package com.aniket.myevent.processor.extensions
 
 import com.aniket.myevent.processor.isNotKotlinPrimitive
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ParameterSpec
@@ -54,9 +55,20 @@ object KSPExtensions {
     fun KSFunctionDeclaration.containsAnnotation(qualifierName: String?): Boolean {
         return this.annotations.firstOrNull {
             it.annotationType.resolve().declaration
-                .qualifiedName?.asString() == qualifiedName?.toString()
+                .qualifiedName?.asString() == qualifierName
         } != null
     }
+
+
+
+fun KSPropertyDeclaration.containsAnnotation(qualifierName: String?): Boolean {
+        return this.annotations.firstOrNull {
+            it.annotationType.resolve().declaration
+                .qualifiedName?.asString() == qualifierName
+        } != null
+    }
+
+
 
     fun KSFunctionDeclaration.containsAnnotationShortName(shortName: String?): Boolean {
         return this.annotations.firstOrNull {

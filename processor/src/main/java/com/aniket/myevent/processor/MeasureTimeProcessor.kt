@@ -1,6 +1,7 @@
 package com.aniket.myevent.processor
 
 import com.aniket.myevent.annotations.MeasureTime
+import com.aniket.myevent.processor.injection.runningOrder
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPLogger
@@ -27,6 +28,8 @@ class MeasureTimeProcessor(
 ) : SymbolProcessor {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        runningOrder.add(this::class.java.simpleName)
+
         val symbols = resolver
             .getSymbolsWithAnnotation(MeasureTime::class.qualifiedName!!)
         val unableToProcess = symbols.filterNot { it.validate() }

@@ -9,6 +9,7 @@ import com.aniket.myevent.annotations.TestService
 import com.aniket.myevent.processor.extensions.KSPExtensions.containsAnnotationShortName
 import com.aniket.myevent.processor.extensions.KSPExtensions.functionArguments
 import com.aniket.myevent.processor.extensions.KSPExtensions.getClassReturnType
+import com.aniket.myevent.processor.injection.runningOrder
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.processing.CodeGenerator
@@ -35,6 +36,7 @@ class CalculatorProcessor(
     private val packageName = ""
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        runningOrder.add(this::class.java.simpleName)
         val symbols = resolver
             .getSymbolsWithAnnotation(Calculator::class.qualifiedName!!)
         val unableToProcess = symbols.filterNot { it.validate() }

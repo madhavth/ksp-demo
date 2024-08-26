@@ -1,6 +1,7 @@
 package com.aniket.myevent.processor
 
 import com.aniket.myevent.annotations.MyEvent
+import com.aniket.myevent.processor.injection.runningOrder
 import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
@@ -21,7 +22,7 @@ class MyEventProcessor(
     private val options: Map<String, String>
 ) : SymbolProcessor {
     override fun process(resolver: Resolver): List<KSAnnotated> {
-
+        runningOrder.add(this::class.java.simpleName)
         val symbols = resolver
             .getSymbolsWithAnnotation(MyEvent::class.qualifiedName!!)
         val unableToProcess = symbols.filterNot { it.validate() }

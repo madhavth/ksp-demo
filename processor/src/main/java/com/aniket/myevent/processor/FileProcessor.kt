@@ -1,6 +1,7 @@
 package com.aniket.myevent.processor
 
 import com.aniket.myevent.annotations.MyFile
+import com.aniket.myevent.processor.injection.runningOrder
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
@@ -23,6 +24,8 @@ class FileProcessor(
     private val packageName = ""
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        runningOrder.add(this::class.java.simpleName)
+
         val symbols = resolver
             .getSymbolsWithAnnotation(MyFile::class.qualifiedName!!)
         val unableToProcess = symbols.filterNot { it.validate() }

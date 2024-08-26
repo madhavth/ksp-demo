@@ -10,6 +10,7 @@ import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.validate
+import com.squareup.kotlinpoet.FileSpec
 import java.io.File
 import kotlin.math.log
 
@@ -77,17 +78,35 @@ class FileProcessor(
 
             val tables = sqliteWrapper.listTables()
             tables.forEach { println(it) }
+
+            val customers = sqliteWrapper.getCustomerList()
+
+            val myEndCustomerString = customers.map {
+                """val customer${it.id} = Customer(
+                    |   id = ${it.id},
+                    |   phoneNumber = ${it.phoneNumber},
+                    |   houseHoldIncome = ${it.houseHoldIncome},
+                    |   email = "${it.email}",
+                    |   lastName = "${it.lastName}",
+                    |   firstName = "${it.firstName}"
+                    |)
+                    |
+                    |
+                """.trimMargin()
+            }.joinToString("\n")
+
             sqliteWrapper.close()
-
-
 
 
             outputStream.use {
                 it.write(
-                    """
-                    |package $packageName
+                    """package $packageName
+                        |
+                        |import ${Customer::class.qualifiedName}
                     |
                     |//$tables
+                    |// fill the fields
+                    |$myEndCustomerString
                     |
                 """.trimMargin().toByteArray()
                 )

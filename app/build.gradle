@@ -56,4 +56,5 @@ dependencies {
 
     implementation(project(":annotations"))
     ksp(project(":processor"))
+    implementation(project(":processor"))
 }

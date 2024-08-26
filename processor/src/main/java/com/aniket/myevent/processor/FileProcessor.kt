@@ -6,14 +6,12 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.processing.Dependencies
-import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.validate
-import java.io.FileInputStream
-import java.io.FileOutputStream
+import java.io.File
+import kotlin.math.log
 
 
 class FileProcessor(
@@ -49,43 +47,51 @@ class FileProcessor(
 
             // read the file here and output saved to this outputStream
             val fileName = "test.txt"
-            val fileContent: String? = this.javaClass.classLoader.getResourceAsStream("test.txt")
-                ?.bufferedReader()
-                ?.readLine()
+            val dbInputStream = this.javaClass.classLoader.getResourceAsStream("Car_Database.db")
 
+//            dbInputStream?.copyTo(outputFile.outputStream())
+
+            val exists = File(fileName).exists()
+
+            if(exists) {
+                logger.error("Car_Database.db not found.")
+                return
+            }
+
+            val outputFile = File("car_db.db")
+            val fileOutputStream = outputFile.outputStream()
 
             val outputStream = codeGenerator.createNewFile(
                 dependencies = dependencies,
-                packageName,
+                packageName = packageName,
                 fileName = toGenerateFileName
             )
+
+            dbInputStream?.copyTo(fileOutputStream)
+            val sqliteWrapper = SQLiteWrapper(outputFile.canonicalPath)
+
+            if(!outputFile.exists()) {
+                logger.error("this is not what we agreed upon")
+                return
+            }
+
+            val tables = sqliteWrapper.listTables()
+            tables.forEach { println(it) }
+            sqliteWrapper.close()
+
+
+
 
             outputStream.use {
                 it.write(
                     """
                     |package $packageName
                     |
-                    |//$fileContent
+                    |//$tables
                     |
                 """.trimMargin().toByteArray()
                 )
             }
         }
     }
-}
-
-internal class Test {
-
-}
-
-fun main() {
-    val test = Test()
-    val fileName = "test.txt"
-
-    val classLoader = test.javaClass.classLoader
-    val resources = classLoader.getResources("test.txt")
-    resources.asIterator().forEachRemaining { resource ->
-        println("Available resource: ${resource.path}")
-    }
-
 }

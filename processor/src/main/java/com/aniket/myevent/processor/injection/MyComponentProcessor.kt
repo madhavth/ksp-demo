@@ -34,11 +34,32 @@ class MyComponentProcessor(
             *resolver.getAllFiles().toList().toTypedArray()
         )
 
+        createNewFile(dependencies)
+
         symbols.filter { it is KSClassDeclaration && it.validate() }
             .forEach {
                 it.accept(MyComponentVisitor(dependencies), Unit)
             }
         return unableToProcess.toList()
+    }
+
+    private fun createNewFile(dependencies: Dependencies) {
+        try {
+            val outputStream = codeGenerator.createNewFile(
+                dependencies = dependencies,
+                packageName,
+                fileName = "dummy",
+                extensionName = "txt"
+            )
+            outputStream.use {
+                it.write(
+                    """//this file is created, here you go.
+    """.trimMargin().toByteArray()
+                )
+            }
+        } catch (e: FileAlreadyExistsException) {
+            logger.warn("file already exists. ${e.file.name}")
+        }
     }
 
     private inner class MyComponentVisitor(val dependencies: Dependencies) : KSVisitorVoid() {
@@ -54,20 +75,23 @@ class MyComponentProcessor(
 //                fileName = toGenerateFileName
 //            )
 
-            MyProcessorsTracker.componentsQualifiedNames[name] = "${classDeclaration.qualifiedName?.asString()}"
+            MyProcessorsTracker.componentsQualifiedNames[name] =
+                "${classDeclaration.qualifiedName?.asString()}"
 
-            for(function in classDeclaration.getDeclaredFunctions()) {
+            for (function in classDeclaration.getDeclaredFunctions()) {
 
-                if(function.containsAnnotation(MyProvides::class.qualifiedName)) {
+                if (function.containsAnnotation(MyProvides::class.qualifiedName)) {
                     val functionReturnType = function.returnType?.element.toString()
                     val functionName = function.simpleName
 
                     MyProcessorsTracker.qualifiedReturnType[name].let {
                         val list = it ?: mutableListOf()
-                        list.add(MethodReturnType(
-                            functionName.getShortName(),
-                            functionReturnType
-                        ))
+                        list.add(
+                            MethodReturnType(
+                                functionName.getShortName(),
+                                functionReturnType
+                            )
+                        )
                         MyProcessorsTracker.qualifiedReturnType[name] = list
                     }
 

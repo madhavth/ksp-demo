@@ -4,3 +4,4 @@ com.aniket.myevent.processor.calculator.CalculatorProcessorProvider
 com.aniket.myevent.processor.FileProcessorProvider
 com.aniket.myevent.processor.injection.MyComponentProcessorProvider
 com.aniket.myevent.processor.injection.InjectionProcessorProvider
+com.aniket.myevent.processor.service.MyServiceProcessorProvider

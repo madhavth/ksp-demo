@@ -1,5 +1,6 @@
 package com.aniket.myevent
 
+import com.aniket.myevent.annotations.Calculator
 import org.junit.Test
 
 import org.junit.Assert.*
@@ -13,5 +14,11 @@ class ExampleUnitMyTest {
     @Test
     fun addition_isCorrect() {
         assertEquals(4, 2 + 2)
+    }
+
+    @Test
+    fun testQualifierName() {
+        val value = Calculator::class.qualifiedName
+        assertEquals(value, "Calculator")
     }
 }

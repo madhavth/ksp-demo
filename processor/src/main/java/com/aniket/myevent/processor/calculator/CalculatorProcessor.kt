@@ -5,6 +5,7 @@ import com.aniket.myevent.annotations.Calculator
 import com.aniket.myevent.annotations.Multiply
 import com.aniket.myevent.annotations.SquareAdd
 import com.aniket.myevent.annotations.Subtract
+import com.aniket.myevent.annotations.TestService
 import com.aniket.myevent.processor.extensions.KSPExtensions.containsAnnotationShortName
 import com.aniket.myevent.processor.extensions.KSPExtensions.functionArguments
 import com.aniket.myevent.processor.extensions.KSPExtensions.getClassReturnType
@@ -21,6 +22,7 @@ import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
@@ -96,11 +98,14 @@ class CalculatorProcessor(
                 |}
             """.trimMargin()
 
+            val initBlock = FileSpec.builder(packageName, toGenerateFileName)
+                .addImport("java.util", "HashMap")
+                .build()
+
             outputStream.use {
                 it.write(
                     """
-                    |package $packageName
-                    |
+                    |$initBlock
                     |${classBuilder.build()}
                     |
                     |${returnThisObject}

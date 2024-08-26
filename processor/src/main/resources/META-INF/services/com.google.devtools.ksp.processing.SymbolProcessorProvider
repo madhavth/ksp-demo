@@ -1,3 +1,4 @@
 com.aniket.myevent.processor.MyEventProcessorProvider
 com.aniket.myevent.processor.MeasureTimeProcessorProvider
 com.aniket.myevent.processor.calculator.CalculatorProcessorProvider
+com.aniket.myevent.processor.FileProcessorProvider

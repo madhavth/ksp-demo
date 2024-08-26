@@ -15,4 +15,9 @@ class AppComponent {
     fun providesInteger(): Int {
         return 123456
     }
+
+    @MyProvides
+    fun providesCustomFunction(): TestingThisRecord {
+        return TestingThisRecord()
+    }
 }

@@ -91,7 +91,8 @@ class InjectionProcessor(
                     statement = """${componentClass}().${returnType.methodName}()"""
                 }
                 else {
-                    statement = """wtf"""
+                    logger.error("Cannot inject without @MyProvides for return Type $propertyType")
+                    return
                 }
 
                 injectBuilder.addCode(""" instance.${propertyName} = $statement """)

@@ -11,6 +11,9 @@ class Danger {
     @CustomInject
     var myInt: Int = 0
 
+    @CustomInject
+    lateinit var test: TestingThisRecord
+
     init {
         DangerInject.inject(this)
     }
@@ -20,4 +23,5 @@ fun main() {
     val danger = Danger()
     println(danger.testing)
     println(danger.myInt)
+    println(danger.test)
 }

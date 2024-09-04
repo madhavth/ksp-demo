@@ -57,4 +57,7 @@ dependencies {
     implementation(project(":annotations"))
     ksp(project(":processor"))
     implementation(project(":processor"))
+
+    // coroutines stuff
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
 }

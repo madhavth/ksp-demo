@@ -27,6 +27,7 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
+import java.io.File
 
 class CalculatorProcessor(
     options: Map<String, String>,
@@ -53,13 +54,17 @@ class CalculatorProcessor(
         return unableToProcess.toList()
     }
 
-    private inner class CalculatorVisitor(val dependencies: Dependencies) : KSVisitorVoid() {
+    inner class CalculatorVisitor(val dependencies: Dependencies) : KSVisitorVoid() {
         @OptIn(KspExperimental::class)
         override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
+
 
             val name = classDeclaration.simpleName.getShortName()
             val toGenerateFileName = name + "Generated"
             val packageName = classDeclaration.packageName.asString()
+
+            val initBlock = FileSpec.builder(packageName, toGenerateFileName)
+                .addImport("java.util", "HashMap")
 
             val outputStream = codeGenerator.createNewFile(
                 dependencies = dependencies,
@@ -77,22 +82,11 @@ class CalculatorProcessor(
             for (function in functions) {
                 var arguments = function.parameters.map { it.name?.getShortName() }
 
-                if(arguments.isEmpty()) {
+                if (arguments.isEmpty()) {
                     arguments = listOf("0")
                 }
 
-                if(processSymbol(function, Add::class.simpleName, classBuilder) {
-                    add(arguments, it)
-                }) { }
-                else if (processSymbol(function, Subtract::class.simpleName, classBuilder) {
-                    subtract(arguments, it)
-                }) { }
-                else if(processSymbol(function, Multiply::class.simpleName, classBuilder) {
-                    multiply(arguments, it)
-                }) { }
-                else if(processSymbol(function, SquareAdd::class.simpleName, classBuilder) {
-                    squareAdd(arguments,it)
-                }) { }
+                processSymbol(function, classBuilder, arguments)
             }
 
             val returnThisObject = """fun get$name(): $name {
@@ -100,14 +94,12 @@ class CalculatorProcessor(
                 |}
             """.trimMargin()
 
-            val initBlock = FileSpec.builder(packageName, toGenerateFileName)
-                .addImport("java.util", "HashMap")
-                .build()
 
             outputStream.use {
                 it.write(
                     """
-                    |$initBlock
+                    |${initBlock.build()}
+                    |
                     |${classBuilder.build()}
                     |
                     |${returnThisObject}
@@ -116,40 +108,44 @@ class CalculatorProcessor(
             }
         }
 
-        private fun squareAdd(arguments: List<String?>, it: FunSpec.Builder) {
-            val arg = arguments.map {
-                "$it*$it"
-            }.joinToString(" + ")
-            it.addStatement("return $arg")
-        }
+    }
 
-        private fun multiply(arguments: List<String?>, it: FunSpec.Builder) {
-            it.addStatement("return ${arguments.joinToString("*")}")
-        }
 
-        private fun add(
-            arguments: List<String?>,
-            it: FunSpec.Builder
-        ) {
-            it.addStatement("return ${arguments.joinToString("+")}")
-        }
+    private fun squareAdd(arguments: List<String?>, it: FunSpec.Builder) {
+        val arg = arguments.map {
+            "$it*$it"
+        }.joinToString(" + ")
+        it.addStatement("return $arg")
+    }
 
-        private fun subtract(
-            arguments: List<String?>,
-            it: FunSpec.Builder
-        ) {
-            it.addStatement("return ${arguments.joinToString("-")}")
-        }
+    private fun multiply(arguments: List<String?>, it: FunSpec.Builder) {
+        it.addStatement("return ${arguments.joinToString("*")}")
+    }
+
+    private fun add(
+        arguments: List<String?>,
+        it: FunSpec.Builder
+    ) {
+        it.addStatement("return ${arguments.joinToString("+")}")
+    }
+
+    private fun subtract(
+        arguments: List<String?>,
+        it: FunSpec.Builder
+    ) {
+        it.addStatement("return ${arguments.joinToString("-")}")
     }
 
 
     @OptIn(KspExperimental::class)
     fun processSymbol(
         function: KSFunctionDeclaration,
-        shortName: String?,
         classDeclaration: TypeSpec.Builder,
-        callback: (FunSpec.Builder) -> Unit,
-                      ): Boolean {
+        arguments: List<String?>,
+        callback: (FunSpec.Builder) -> Unit = {},
+    ): Boolean {
+        val firstAnnotation = function.annotations.firstOrNull() ?: return false
+        val shortName = firstAnnotation.shortName.getShortName()
         val containsAnnotation = function.containsAnnotationShortName(shortName)
         if (containsAnnotation) {
             val funSpec = FunSpec.builder(function.simpleName.getShortName())
@@ -166,7 +162,27 @@ class CalculatorProcessor(
             // add all the params as they are
             funSpec.addParameters(function.functionArguments())
             funSpec.addStatement("// auto generated code for $shortName")
+
+            when (firstAnnotation.shortName.getShortName()) {
+                Add::class.java.simpleName -> {
+                    add(arguments, funSpec)
+                }
+
+                Subtract::class.java.simpleName -> {
+                    subtract(arguments, funSpec)
+                }
+
+                Multiply::class.simpleName -> {
+                    multiply(arguments, funSpec)
+                }
+
+                SquareAdd::class.simpleName -> {
+                    squareAdd(arguments, funSpec)
+                }
+            }
+
             callback(funSpec)
+
             funSpec.addModifiers(KModifier.OVERRIDE)
             // add the body and return statement
             classDeclaration.addFunction(funSpec.build())
